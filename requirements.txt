@@ -1,0 +1,11 @@
+# For GitHub API
+PyGithub
+
+# For Google Gemini API
+google-generativeai
+
+# For local development (reading .env files)
+python-dotenv
+
+# General purpose HTTP client (fallback)
+requests

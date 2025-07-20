@@ -1,0 +1,19 @@
+# Python virtual environment
+venv/
+.venv/
+env/
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# State file (can be committed, but often excluded if state is managed remotely or per environment)
+# For this project, let's commit it to have a starting point.
+# state.json 
+
+# IDE/Editor specific
+.vscode/
+.idea/

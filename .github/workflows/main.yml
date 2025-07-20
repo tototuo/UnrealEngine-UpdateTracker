@@ -1,0 +1,57 @@
+name: Unreal Engine Update Tracker
+
+on:
+  workflow_dispatch:
+    inputs:
+      manual_commit_scan_limit:
+        description: 'Number of recent commits to scan. If empty, scans the last 24 hours.'
+        required: false
+        default: ''
+      discussion_category:
+        description: 'GitHub Discussion category to post to'
+        required: false
+        default: 'Daily Reports'
+      gemini_model:
+        description: 'The Gemini model to use for analysis (e.g., gemini-2.5-pro, gemini-2.5-flash).'
+        required: false
+        default: ''
+  schedule:
+    - cron: '0 23 * * *' # Runs every day at 23:00 UTC (8:00 AM JST)
+
+jobs:
+  run-update-check:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.actor == github.repository_owner
+    env:
+      DEFAULT_GEMINI_MODEL: 'gemini-2.5-pro' # <-- Change the default model here
+    permissions:
+      contents: write # To update state file
+      issues: write   # To create issues
+      discussions: write # To create discussions
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run update check script
+        env:
+          UE_REPO_PAT: ${{ secrets.UE_REPO_PAT }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          COMMIT_SCAN_LIMIT: ${{ github.event.inputs.manual_commit_scan_limit }}
+          DISCUSSION_CATEGORY: ${{ github.event.inputs.discussion_category || 'Daily Reports' }}
+          DISCUSSION_REPO: ${{ secrets.DISCUSSION_REPO }}
+          DISCUSSION_REPO_PAT: ${{ secrets.DISCUSSION_REPO_PAT }}
+          GEMINI_MODEL: ${{ github.event.inputs.gemini_model || env.DEFAULT_GEMINI_MODEL }}
+        run: python scripts/main.py
