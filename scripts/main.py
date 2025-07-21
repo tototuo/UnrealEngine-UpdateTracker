@@ -68,7 +68,7 @@ def filter_commit(commit):
     return True
 
 
-def analyze_commits_in_bulk(model, commits):
+def analyze_commits_in_bulk(model, commits, report_language="Japanese"):
     """
     Analyzes a list of commits in bulk with the Gemini API and returns a formatted Markdown report.
     """
@@ -92,69 +92,17 @@ Files Changed:
     
     aggregated_commits = "\n".join(commits_data)
 
-    prompt = f"""あなたはUnreal Engineの専門家であり、日英バイリンガルのテクニカルライターです。以下に、Unreal EngineのGitHubリポジトリから取得した複数のコミット情報のリストを示します。
-
-あなたのタスクは、これらのコミット全体を分析し、開発者にとって特に重要だと思われる変更点を抽出し、**日本語のサマリーレポートを作成し、その直後に同じ内容の英語のレポートを併記する**ことです。
-
-レポートはMarkdown形式で、以下のガイドラインに従ってください。
-
-### 日本語レポートのガイドライン
-1.  **最重要項目の抽出:** 全てのコミットをリストアップするのではなく、新機能の追加、大規模なリファクタリング、APIの重大な変更、パフォーマンスに大きな影響を与える修正など、特に注目すべき変更だけを厳選してください。**あなたの判断で重要でないと見なしたコミットは、レポートから完全に省略（割愛）してください。**
-2.  **カテゴリ分類:** 抽出した項目を、以下のカテゴリに分類して見出しを作成してください。
-    - `## 🚀 新機能 (New Features)`
-    - `## 💥 重大な変更 (Breaking Changes)`
-    - `## ✨ パフォーマンス改善 (Performance Improvements)`
-    - `## 🛠️ リファクタリングと改善 (Refactoring & Improvements)`
-    - `## 🐛 バグ修正 (Bug Fixes)`
-    - `## 📚 その他 (Miscellaneous)`
-3.  **要約とグルーピング:**
-    *   類似した内容の更新は一つにまとめてください。
-    *   各項目について、変更内容が簡潔に理解できる要約を記述してください。
-    *   特に重要な変更点については、その背景や開発者への影響がわかるように、複数行で詳細な説明を加えてください。
-4.  **リンクの列挙:**
-    *   グルーピングした項目の下に、関連する全てのコミットへのリンクを `* ([コミットSHAの先頭7文字](完全なコミットURL))` の形式でリストアップしてください。
-
-### 英語レポートのガイドライン
-*   日本語レポートの内容を、専門用語を正しく使用して、自然な英語に翻訳してください。
-*   カテゴリの見出しも英語にしてください (e.g., `## 🚀 New Features`)。
-*   フォーマットは日本語レポートと完全に同一にしてください。
-
-### 全体の出力形式
-もし注目すべき変更が一つもなかった場合は、「今週、注目すべき大きな更新はありませんでした。 / There were no notable updates this week.」とだけ出力してください。
-それ以外の場合は、以下の形式で出力してください。余計な前置きや結びの言葉は不要です。
-
-```markdown
-{{ここに日本語のレポート}}
-
----
-<br>
-
-{{ここに英語のレポート}}
-```
-
-**出力例:**
-```markdown
-## 🚀 新機能 (New Features)
-- 外部ビデオアセットでProtron Playerを選択するための設定が追加されました。
-  * ([14513a4](https://github.com/EpicGames/UnrealEngine/commit/14513a4b2d5818265715f788b8e9d4a5c6a7b8c9))
-
----
-<br>
-
-## 🚀 New Features
-- Added a setting to select the Protron Player for external video assets.
-  * ([14513a4](https://github.com/EpicGames/UnrealEngine/commit/14513a4b2d5818265715f788b8e9d4a5c6a7b8c9))
-```
-
----
-以下が分析対象のコミット情報です：
----
-
-{aggregated_commits}
-"""
-
     try:
-        print(f"  > Sending aggregated prompt to Gemini for {len(commits)} commits...")
+        # Load the prompt from the external file
+        with open("prompts/report_prompt.md", "r", encoding="utf-8") as f:
+            prompt_template = f.read()
+        
+        prompt = prompt_template.format(
+            report_language=report_language,
+            aggregated_commits=aggregated_commits
+        )
+
+        print(f"  > Sending aggregated prompt to Gemini for {len(commits)} commits (Language: {report_language})...")
         
         # --- Start of Detailed Logging ---
         # print(f"\n--- BULK PROMPT ---\n{prompt}\n--------------------")
@@ -170,6 +118,9 @@ Files Changed:
         
         return response.text
 
+    except FileNotFoundError:
+        print("FATAL: prompts/report_prompt.md not found.")
+        return None
     except Exception as e:
         print(f"Error analyzing commits in bulk with AI: {e}")
         return None
@@ -330,7 +281,9 @@ def main():
 
     # --- Generate Report and Post Discussion ---
     print("\n--- 4. Generating Report ---")
-    report_body = analyze_commits_in_bulk(ai_model, important_commits)
+    report_language = os.environ.get("REPORT_LANGUAGE", "Japanese")
+    print(f"Report language set to: {report_language}")
+    report_body = analyze_commits_in_bulk(ai_model, important_commits, report_language)
     
     if report_body:
         report_title = f"Unreal Engine Daily Report - {time.strftime('%Y-%m-%d')}"

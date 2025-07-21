@@ -3,31 +3,52 @@ name: Unreal Engine Update Tracker
 on:
   workflow_dispatch:
     inputs:
-      manual_commit_scan_limit:
-        description: 'Number of recent commits to scan. If empty, scans the last 24 hours.'
+      commit_scan_limit:
+        description: 'Number of recent commits to scan. If empty, the script defaults to the last 24 hours.'
+        required: false
+        default: ''
+      report_language:
+        description: 'Language for the report (e.g., Japanese, English). Default: Japanese'
         required: false
         default: ''
       discussion_category:
-        description: 'GitHub Discussion category to post to'
+        description: 'GitHub Discussion category to post to. Default: Daily Reports'
         required: false
-        default: 'Daily Reports'
+        default: ''
       gemini_model:
-        description: 'The Gemini model to use for analysis (e.g., gemini-2.5-pro, gemini-2.5-flash).'
+        description: 'The Gemini model to use for analysis. Default: gemini-2.5-pro'
         required: false
         default: ''
   schedule:
-    - cron: '0 23 * * *' # Runs every day at 23:00 UTC (8:00 AM JST)
+    # Runs every day at 23:00 UTC (which is 8:00 AM JST)
+    - cron: '0 23 * * *'
 
 jobs:
   run-update-check:
     runs-on: ubuntu-latest
+    # Run on schedule or if manually triggered by the repository owner
     if: github.event_name == 'schedule' || github.actor == github.repository_owner
-    env:
-      DEFAULT_GEMINI_MODEL: 'gemini-2.5-pro' # <-- Change the default model here
     permissions:
-      contents: write # To update state file
-      issues: write   # To create issues
-      discussions: write # To create discussions
+      contents: write      # To update the state file (e.g., last_processed_commit.txt)
+      issues: write        # To create issues for error reporting
+      discussions: write   # To post the daily summary reports
+
+    env:
+      # --- Secrets (Must be configured in repository settings) ---
+      UE_REPO_PAT: ${{ secrets.UE_REPO_PAT }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      DISCUSSION_REPO: ${{ secrets.DISCUSSION_REPO }}
+      DISCUSSION_REPO_PAT: ${{ secrets.DISCUSSION_REPO_PAT }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # --- Dynamic Configuration ---
+      # The script will use the following environment variables.
+      # Priority: Manual Input > Repository Variable > Workflow Default
+      REPORT_LANGUAGE: ${{ github.event.inputs.report_language || vars.REPORT_LANGUAGE || 'Japanese' }}
+      GEMINI_MODEL: ${{ github.event.inputs.gemini_model || vars.GEMINI_MODEL || 'gemini-2.5-pro' }}
+      DISCUSSION_CATEGORY: ${{ github.event.inputs.discussion_category || vars.DISCUSSION_CATEGORY || 'Daily Reports' }}
+      COMMIT_SCAN_LIMIT: ${{ github.event.inputs.commit_scan_limit }}
+      GITHUB_REPOSITORY: ${{ github.repository }}
 
     steps:
       - name: Checkout repository
@@ -44,14 +65,4 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Run update check script
-        env:
-          UE_REPO_PAT: ${{ secrets.UE_REPO_PAT }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          COMMIT_SCAN_LIMIT: ${{ github.event.inputs.manual_commit_scan_limit }}
-          DISCUSSION_CATEGORY: ${{ github.event.inputs.discussion_category || 'Daily Reports' }}
-          DISCUSSION_REPO: ${{ secrets.DISCUSSION_REPO }}
-          DISCUSSION_REPO_PAT: ${{ secrets.DISCUSSION_REPO_PAT }}
-          GEMINI_MODEL: ${{ github.event.inputs.gemini_model || env.DEFAULT_GEMINI_MODEL }}
         run: python scripts/main.py

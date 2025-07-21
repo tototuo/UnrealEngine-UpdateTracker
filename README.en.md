@@ -5,10 +5,10 @@
 This project is an automated service that periodically monitors updates to Unreal Engine's private GitHub repository, summarizes important changes (such as new features and specification changes) using AI (Google Gemini), and posts them as reports to GitHub Discussions.
 
 <table><tr><td>
-<img width="644" alt="image" src="https://github.com/user-attachments/assets/ad69f54f-9e18-49db-8024-aa3052d97ffa" />
+<img width="644" alt="image" src="https://raw.githubusercontent.com/pafuhana1213/Screenshot/master/468407129-ad69f54f-9e18-49db-8024-aa3052d97ffa.png" />
 </td></tr></table>
 
-Note: This image is an example of a report, and the content shown is entirely dummy data. It does not represent actual updates made to Unreal Engine. Although the example is in Japanese, reports can also be generated in English by adjusting the prompt in the workflow file.
+Note: This image is an example of a report, and the content shown is entirely dummy data. It does not represent actual updates made to Unreal Engine.
 
 ## 🌟 Key Features
 
@@ -44,19 +44,24 @@ It is strongly recommended to set `DISCUSSION_REPO` to a **fork of the Unreal En
 
 -   **Automatic Execution:** The workflow runs automatically on the configured schedule (defaults to daily at 23:00 UTC / 8:00 AM JST).
 -   **Manual Execution:** You can also run it manually by going to the repository's `Actions` tab, selecting the `Unreal Engine Update Tracker` workflow, and clicking the `Run workflow` button. **Note: Manual execution is restricted to repository administrators.**
-    -   **Discussion Category:** You can specify the target discussion category name at runtime (default: `Daily Reports`).
-    -   **Gemini Model:** You can temporarily specify the Gemini model name to use for analysis.
+    -   **Report Language:** Enter the language for the report (e.g., `English`, `Japanese`). Default: `Japanese`.
+    -   **Commit Scan Limit:** Specify the number of recent commits to scan for manual runs (default: last 24 hours).
+    -   **Discussion Category:** The name of the Discussion category to post the report to. Default: `Daily Reports`.
+    -   **Gemini Model:** The name of the AI model to use for analysis. Default: `gemini-2.5-pro`.
 
--   **Changing the Default Model:** If you want to change the default model used for scheduled runs, you only need to edit one line in the `.github/workflows/main.yml` file.
-    ```yaml
-    # .github/workflows/main.yml
+-   **Changing Default Values:**
+    You can change the default values for scheduled and manual runs by setting repository **Variables**. Go to `Settings` > `Secrets and variables` > `Actions`, and from the `Variables` tab, set the following:
+    -   `REPORT_LANGUAGE`: The default report language (e.g., `English`).
+    -   `DISCUSSION_CATEGORY`: The default category for posts (e.g., `Announcements`).
+    -   `GEMINI_MODEL`: The default AI model to use (e.g., `gemini-2.5-pro`).
 
-    jobs:
-      run-update-check:
-        runs-on: ubuntu-latest
-        env:
-          DEFAULT_GEMINI_MODEL: 'gemini-2.5-pro' # <-- Change the default model here
-    ```
+## 🎨 Customization
+
+### Changing the Report Format
+
+The output format, including the report's categories, summary style, and overall structure, is determined by the instructions (prompt) given to the AI.
+
+If you want to change the format, such as requesting more detailed reports or emphasizing specific information, you can directly edit the `prompts/report_prompt.md` file at the root of the repository. By modifying this file, you can customize the AI's behavior without touching any Python code.
 
 ## 📝 License and Important Notices
 
@@ -75,3 +80,14 @@ It is strongly recommended to set `DISCUSSION_REPO` to a **fork of the Unreal En
 -   **Execution Notes:**
     *   This script actually posts to GitHub Discussions according to its configuration. Please be careful during test runs.
     *   Various APIs have usage limits (rate limits).
+
+---
+
+## ✨ Please Consider Supporting!
+
+I hope this tool is helping you with your daily UE catch-up.
+
+This tool is developed and maintained by a single person, covering costs like coffee and API fees out of pocket as a passion project. ☕
+If you find this tool useful, please consider supporting its development through GitHub Sponsors. Your support would be a great encouragement and a huge motivation to keep this project going!
+
+[💖 **Support the developer on GitHub Sponsors**](https://github.com/sponsors/pafuhana1213)

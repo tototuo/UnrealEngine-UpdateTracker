@@ -5,7 +5,7 @@
 このプロジェクトは、Unreal EngineのプライベートGitHubリポジトリの更新を定期的に監視し、AI（Google Gemini）を使って重要な変更（新機能、仕様変更など）を要約し、GitHub Discussionsにレポートとして投稿する自動化サービスです。
 
 <table><tr><td>
-<img width="644" alt="image" src="https://github.com/user-attachments/assets/ad69f54f-9e18-49db-8024-aa3052d97ffa" />
+<img width="644" alt="image" src="https://raw.githubusercontent.com/pafuhana1213/Screenshot/master/468407129-ad69f54f-9e18-49db-8024-aa3052d97ffa.png" />
 </td></tr></table>
 
 注意：この画像はレポートの例であり、書かれている内容は完全にダミーです。UnrealEngineで実際に行われた更新内容ではありません。
@@ -44,19 +44,24 @@
 
 -   **自動実行:** 設定されたスケジュール（デフォルトでは毎日日本時間午前8時 / UTC 23:00）になると、自動的にワークフローが実行されます。
 -   **手動実行:** リポジトリの`Actions`タブに移動し、`Unreal Engine Update Tracker`ワークフローを選択して、`Run workflow`ボタンから手動で実行することも可能です。**注意: 手動実行はリポジトリの管理者のみが可能です。**
-    -   **Discussion Category:** 実行時に、投稿先のディスカッションカテゴリ名を指定できます。（デフォルト: `Daily Reports`）
-    -   **Gemini Model:** 解析に使用するGeminiのモデル名を一時的に指定できます。
+    -   **Report Language:** レポートを出力したい言語を自由に入力します（例: `Japanese`, `English`）。デフォルトは `Japanese` です。
+    -   **Commit Scan Limit:** 手動実行時にスキャンする最新コミット数を指定できます。（デフォルト: 過去24時間）
+    -   **Discussion Category:** レポートを投稿するDiscussionカテゴリ名。デフォルトは `Daily Reports` です。
+    -   **Gemini Model:** 解析に使用するAIモデル名。デフォルトは `gemini-2.5-pro` です。
 
--   **デフォルトモデルの変更:** スケジュール実行時などに使われるデフォルトのモデルを変更したい場合は、`.github/workflows/main.yml` ファイル内の1箇所を直接編集してください。
-    ```yaml
-    # .github/workflows/main.yml
+-   **各種デフォルト値の変更:**
+    スケジュール実行時や手動実行時のデフォルト値は、リポジトリの **Variables** で設定することで変更できます。`Settings` > `Secrets and variables` > `Actions` の `Variables` タブから、以下の変数を設定します。
+    -   `REPORT_LANGUAGE`: デフォルトのレポート言語（例: `English`）
+    -   `DISCUSSION_CATEGORY`: デフォルトの投稿先カテゴリ名（例: `Daily Reports`）
+    -   `GEMINI_MODEL`: デフォルトで使用するAIモデル（例: `gemini-2.5-pro`）
 
-    jobs:
-      run-update-check:
-        runs-on: ubuntu-latest
-        env:
-          DEFAULT_GEMINI_MODEL: 'gemini-2.5-pro' # <-- ここでデフォルトモデルを変更
-    ```
+## 🎨 カスタマイズ
+
+### レポートフォーマットの変更
+
+レポートのカテゴリ、要約のスタイル、全体の構成など、出力されるフォーマットはAIへの指示（プロンプト）によって決定されます。
+
+より詳細なレポートが欲しい、あるいは特定の情報を強調したいなど、フォーマットを自由に変更したい場合は、リポジトリのルートにある `prompts/report_prompt.md` ファイルを直接編集してください。このファイルを変更することで、Pythonコードに触れることなく、AIの振る舞いをカスタマイズできます。
 
 ## 📝 ライセンスと利用上の注意 (License and Important Notices)
 
@@ -75,3 +80,15 @@
 -   **実行に関する注意:**
     *   このスクリプトは、設定に従って実際にGitHub Discussionsへ投稿を行います。テスト実行の際はご注意ください。
     *   各種APIには利用制限（レートリミット）が存在します。
+
+
+---
+
+## ✨ よろしければご支援を！
+
+このツールが、皆さんの日々のUEキャッチアップに少しでも役立っていれば、とても嬉しいです。
+
+開発は一個人が趣味と実益を兼ねて、コーヒー代やAPI利用料を自腹でやりくりしながら進めています☕
+もし「このツール、なかなか良いじゃん！」と思っていただけたら、GitHub Sponsorsで応援していただけると、開発の大きな励みになります。
+
+[💖 **GitHub Sponsorsで応援する**](https://github.com/sponsors/pafuhana1213)
