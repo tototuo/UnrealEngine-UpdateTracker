@@ -54,6 +54,7 @@ It is strongly recommended to set `DISCUSSION_REPO` to a **fork of the Unreal En
     -   `REPORT_LANGUAGE`: The default report language (e.g., `English`).
     -   `DISCUSSION_CATEGORY`: The default category for posts (e.g., `Announcements`).
     -   `GEMINI_MODEL`: The default AI model to use (e.g., `gemini-2.5-pro`).
+    -   `UE_BRANCH`: The name of the branch to monitor (e.g., `release`). Defaults to `ue5-main`.
 
 ## 🎨 Customization
 

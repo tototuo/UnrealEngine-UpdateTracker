@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 UE_REPO_NAME = "EpicGames/UnrealEngine" # Target repository
 raw_limit = os.environ.get("COMMIT_SCAN_LIMIT") # Keep for manual override
 COMMIT_SCAN_LIMIT = int(raw_limit) if raw_limit and raw_limit.isdigit() else None
+UE_BRANCH = os.environ.get("UE_BRANCH", "ue5-main") # Target branch
 
 
 def fetch_new_commits(github_client):
@@ -19,20 +20,20 @@ def fetch_new_commits(github_client):
     - If COMMIT_SCAN_LIMIT is set (manual run), it fetches that many recent commits.
     - Otherwise (scheduled run), it fetches commits from the last 24 hours.
     """
-    print(f"Fetching commits from {UE_REPO_NAME}...")
+    print(f"Fetching commits from {UE_REPO_NAME} on branch {UE_BRANCH}...")
     try:
         repo = github_client.get_repo(UE_REPO_NAME)
         print("Successfully accessed repository.")
 
         if COMMIT_SCAN_LIMIT:
-            print(f"Manual override: Fetching the latest {COMMIT_SCAN_LIMIT} commits.")
-            commits = repo.get_commits()
+            print(f"Manual override: Fetching the latest {COMMIT_SCAN_LIMIT} commits from branch '{UE_BRANCH}'.")
+            commits = repo.get_commits(sha=UE_BRANCH)
             new_commits = list(commits[:COMMIT_SCAN_LIMIT])
             new_commits.reverse() # Oldest to newest
         else:
             since_time = datetime.utcnow() - timedelta(hours=24)
-            print(f"Scheduled run: Fetching commits since {since_time.isoformat()} UTC...")
-            commits = repo.get_commits(since=since_time)
+            print(f"Scheduled run: Fetching commits from branch '{UE_BRANCH}' since {since_time.isoformat()} UTC...")
+            commits = repo.get_commits(sha=UE_BRANCH, since=since_time)
             new_commits = list(commits)
             # Commits from .get_commits(since=...) are already in chronological order.
 
@@ -57,7 +58,7 @@ def filter_commit(commit):
     if all(f.filename.startswith("Documentation/") for f in commit.files):
         return False
     # Ignore simple typo fixes
-    if "typo" in commit_message and len(commit.files) == 1:
+    if "typo" in commit_message and commit.files.totalCount == 1:
         return False
     # Ignore merge commits without file changes
     if commit.parents and len(commit.parents) > 1 and not commit.files:

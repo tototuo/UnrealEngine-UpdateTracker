@@ -54,6 +54,7 @@
     -   `REPORT_LANGUAGE`: デフォルトのレポート言語（例: `English`）
     -   `DISCUSSION_CATEGORY`: デフォルトの投稿先カテゴリ名（例: `Daily Reports`）
     -   `GEMINI_MODEL`: デフォルトで使用するAIモデル（例: `gemini-2.5-pro`）
+    -   `UE_BRANCH`: 監視対象のブランチ名（例: `release`）。デフォルトは `ue5-main` です。
 
 ## 🎨 カスタマイズ
 
