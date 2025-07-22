@@ -5,7 +5,7 @@
 このプロジェクトは、Unreal EngineのプライベートGitHubリポジトリの更新を定期的に監視し、AI（Google Gemini）を使って重要な変更（新機能、仕様変更など）を要約し、GitHub Discussionsにレポートとして投稿する自動化サービスです。
 
 <table><tr><td>
-<img width="644" alt="image" src="https://raw.githubusercontent.com/pafuhana1213/Screenshot/master/468407129-ad69f54f-9e18-49db-8024-aa3052d97ffa.png" />
+<img width="644" alt="image" src="https://github.com/pafuhana1213/Screenshot/blob/master/Report_sample_jp.png" />
 </td></tr></table>
 
 注意：この画像はレポートの例であり、書かれている内容は完全にダミーです。UnrealEngineで実際に行われた更新内容ではありません。
