@@ -82,7 +82,7 @@ def analyze_commits_in_bulk(model, commits, report_language="Japanese"):
         # Only commit messages and file paths are used.
         file_list = "\n".join([f"- {file.filename}" for file in commit.files])
         commit_info = f"""---
-Commit: {commit.sha}
+Commit: {commit.sha[:7]}
 URL: {commit.html_url}
 Message:
 {commit.commit.message}
