@@ -5,7 +5,7 @@
 This project is an automated service that periodically monitors updates to Unreal Engine's private GitHub repository, summarizes important changes (such as new features and specification changes) using AI (Google Gemini), and posts them as reports to GitHub Discussions.
 
 <table><tr><td>
-<img width="644" alt="image" src="https://raw.githubusercontent.com/pafuhana1213/Screenshot/master/468407129-ad69f54f-9e18-49db-8024-aa3052d97ffa.png" />
+<img width="644" alt="image" src="https://github.com/pafuhana1213/Screenshot/blob/master/Report_sample_en.png" />
 </td></tr></table>
 
 Note: This image is an example of a report, and the content shown is entirely dummy data. It does not represent actual updates made to Unreal Engine.
