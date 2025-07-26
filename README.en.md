@@ -15,27 +15,67 @@ Note: This image is an example of a report, and the content shown is entirely du
 -   **Automatic Update Checks:** Uses GitHub Actions to check for the latest commits in the UE repository on a schedule (daily at 23:00 UTC / 8:00 AM JST) or manually.
 -   **AI-Powered Summaries:** The Gemini API analyzes commit contents, categorizes them into sections like "New Features" and "Specification Changes," and provides a summary for each.
 -   **Posting to Discussions:** The generated report is posted to the repository's GitHub Discussions as "Unreal Engine Daily Report."
+-   **Slack Notifications:** The report content can also be sent simultaneously to a specified Slack channel.
+-   **Discord Notifications:** The report content can also be sent simultaneously to a specified Discord channel.
+
+## 🚀 Subscribe to the Latest Reports
+
+You can subscribe to the update reports without setting up this tool yourself.
+In the repository below, reports generated at a fixed time every day are posted to GitHub Discussions.
+
+[**Subscribe to the UnrealEngine-UpdateTrackerReport Repository**](https://github.com/pafuhana1213/UnrealEngine-UpdateTrackerReport)
+
+**Note:** This report repository is private and requires a [GitHub account authorized to access the Unreal Engine source code repository](https://www.unrealengine.com/en-US/ue-on-github) to view.
+
+## ✨ Please Consider Supporting!
+
+I hope this tool is helping you with your daily UE catch-up.
+
+This tool is developed and maintained by a single person, covering costs like coffee and API fees out of pocket as a passion project. ☕
+If you find this tool useful, please consider supporting its development through GitHub Sponsors. Your support would be a great encouragement and a huge motivation to keep this project going!
+
+[💖 **Support the developer on GitHub Sponsors**](https://github.com/sponsors/pafuhana1213)
+
+---
+
+**The following documentation is for those who want to fork and customize this tool themselves.**
 
 ## 🛠️ Setup Instructions
 
 1.  **Fork this repository:**
-    Click the **Fork** button in the top-right corner to copy this repository to your own GitHub account. This will enable the GitHub Actions workflow to run under your account.
+    Click the **Fork** button in the top-right corner to copy this repository to your own GitHub account.
 
-2.  **Enable GitHub Discussions:**
-    Go to your repository's `Settings` > `General` > `Features` and check the `Discussions` box to enable it.
+2.  **Set Up Basic Secrets:**
+    First, register the following secrets, which are essential for the tool to operate, in your repository's `Settings` > `Secrets and variables` > `Actions`.
+    -   `UE_REPO_PAT`: A [Personal Access Token (PAT)](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) with read access to the private Unreal Engine repository (`EpicGames/UnrealEngine`).
+    -   `GEMINI_API_KEY`: The API key obtained from [Google AI Studio](https://aistudio.google.com/app/apikey).
 
-3.  **Create a Discussion Category:**
-    In the Discussions tab, create a category for posting reports (e.g., `Announcements` or `Daily Reports`).
+3.  **Configure Notification Targets (At least one is required):**
+    Next, choose and configure where you want to receive the reports. You can set up **GitHub Discussions**, **Slack**, **Discord**, or any combination of them.
 
-4.  **Configure Repository Secrets:**
-    Go to your repository's `Settings` > `Secrets and variables` > `Actions` and register the following repository secrets:
-    -   `UE_REPO_PAT`: Register a [Personal Access Token (PAT)](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) with read access to the private Unreal Engine repository (`EpicGames/UnrealEngine`).
-    -   `GEMINI_API_KEY`: Register the API key obtained from [Google AI Studio](https://aistudio.google.com/app/apikey).
-    -   `DISCUSSION_REPO`: The name of the **private** repository where reports will be posted (e.g., `MyOrg/MyTeamRepo`).
-    -   `DISCUSSION_REPO_PAT`: A PAT with permissions to write Discussions in the repository specified in `DISCUSSION_REPO`.
-  
- **⚠️ Important: Recommendation for Secure Operation**  
- The update history of Unreal Engine is confidential information accessible only to authorized accounts under the Epic Games license agreement. To prevent unintentional information leaks, this tool is designed to **stop operating** if `DISCUSSION_REPO` and `DISCUSSION_REPO_PAT` are not set.
+    #### A) Posting to GitHub Discussions
+    Ideal for team discussions and permanent record-keeping.
+    1.  **Enable Discussions:** In the target repository's `Settings` > `General` > `Features`, enable `Discussions`.
+    2.  **Create a Category:** Create a category in the Discussions tab (e.g., `Announcements`).
+    3.  **Add Secrets:** Register the following secrets.
+        -   `DISCUSSION_REPO`: The name of the **private** repository to post reports to (e.g., `MyOrg/MyTeamRepo`).
+        -   `DISCUSSION_REPO_PAT`: A PAT with permission to write Discussions in `DISCUSSION_REPO`.
+
+    #### B) Posting to Slack
+    Suitable for real-time notifications and quick information sharing.
+    1.  **Create an Incoming Webhook:** Follow [Slack's documentation](https://slack.com/help/articles/115005265063-Using-Incoming-Webhooks-in-Slack) to issue a webhook URL for your desired channel.
+    2.  **Add Secrets:** Register the following secrets.
+        -   `SLACK_WEBHOOK_URL`: The Incoming Webhook URL issued above.
+        -   `SLACK_CHANNEL`: The name of the Slack channel to post to (e.g., `#ue-updates`).
+
+    #### C) Posting to Discord
+    Also suitable for real-time notifications.
+    1.  **Create a Webhook:** Follow [Discord's documentation](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks) to create a webhook URL for your **desired channel**. In Discord, the URL itself determines the destination channel, so you don't need to specify a channel name separately like with Slack.
+    2.  **Add a Secret:** Register the following secret.
+        -   `DISCORD_WEBHOOK_URL`: The webhook URL created above.
+
+ **⚠️ Important: Recommendation for Secure Operation**
+ The update history of Unreal Engine is confidential information accessible only to authorized accounts under the Epic Games license agreement. To prevent unintentional information leaks, this tool is designed to **stop operating** if at least one notification target is not configured.
 
 **Recommended Setup:**
 It is strongly recommended to set `DISCUSSION_REPO` to a **fork of the Unreal Engine source code repository or another private repository where only members with equivalent access rights are present.** This ensures compliance with the license agreement and allows for secure information sharing.
@@ -48,6 +88,9 @@ It is strongly recommended to set `DISCUSSION_REPO` to a **fork of the Unreal En
     -   **Commit Scan Limit:** Specify the number of recent commits to scan for manual runs (default: last 24 hours).
     -   **Discussion Category:** The name of the Discussion category to post the report to. Default: `Daily Reports`.
     -   **Gemini Model:** The name of the AI model to use for analysis. Default: `gemini-2.5-pro`.
+    -   **Slack Webhook URL:** A temporary Slack Webhook URL to use, overriding the secret.
+    -   **Slack Channel:** A temporary Slack channel name to use, overriding the secret.
+    -   **Discord Webhook URL:** A temporary Discord Webhook URL to use, overriding the secret.
 
 -   **Changing Default Values:**
     You can change the default values for scheduled and manual runs by setting repository **Variables**. Go to `Settings` > `Secrets and variables` > `Actions`, and from the `Variables` tab, set the following:
@@ -84,11 +127,3 @@ If you want to change the format, such as requesting more detailed reports or em
 
 ---
 
-## ✨ Please Consider Supporting!
-
-I hope this tool is helping you with your daily UE catch-up.
-
-This tool is developed and maintained by a single person, covering costs like coffee and API fees out of pocket as a passion project. ☕
-If you find this tool useful, please consider supporting its development through GitHub Sponsors. Your support would be a great encouragement and a huge motivation to keep this project going!
-
-[💖 **Support the developer on GitHub Sponsors**](https://github.com/sponsors/pafuhana1213)

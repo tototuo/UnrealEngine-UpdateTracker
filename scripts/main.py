@@ -264,6 +264,37 @@ def send_slack_notification(webhook_url, channel, message_text, title):
         return False
 
 
+def send_discord_notification(webhook_url, message_text, title):
+    """Sends a notification to a Discord channel via a webhook."""
+    print("---")
+    print("Sending Discord notification...")
+    try:
+        # Discord has a 4096 character limit for embed descriptions.
+        # Truncate message_text if it's too long.
+        if len(message_text) > 4000:
+            message_text = message_text[:4000] + "\n\n... (message truncated)"
+
+        payload = {
+            "username": "UE Update Tracker",
+            "avatar_url": "https://i.imgur.com/4M34hi2.png", # A simple robot icon
+            "embeds": [
+                {
+                    "title": title,
+                    "description": message_text,
+                    "color": 3447003,  # A nice blue color, hex #3498db
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            ]
+        }
+        
+        response = requests.post(webhook_url, json=payload)
+        response.raise_for_status()
+        print("Successfully sent Discord notification.")
+        return True
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred while sending Discord notification: {e}")
+        return False
+
 def main():
     """
     Main function to execute the update check.
@@ -307,12 +338,14 @@ def main():
     discussion_repo_pat = os.environ.get("DISCUSSION_REPO_PAT")
     slack_webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
     slack_channel = os.environ.get("SLACK_CHANNEL")
+    discord_webhook_url = os.environ.get("DISCORD_WEBHOOK_URL")
 
     has_discussion_target = discussion_repo_name and discussion_repo_pat
     has_slack_target = slack_webhook_url and slack_channel
+    has_discord_target = discord_webhook_url
 
-    if not has_discussion_target and not has_slack_target:
-        print("FATAL: No notification target is configured. Please set either DISCUSSION_REPO/DISCUSSION_REPO_PAT or SLACK_WEBHOOK_URL/SLACK_CHANNEL in your repository secrets.")
+    if not has_discussion_target and not has_slack_target and not has_discord_target:
+        print("FATAL: No notification target is configured. Please set at least one of the following: DISCUSSION_REPO/DISCUSSION_REPO_PAT, SLACK_WEBHOOK_URL/SLACK_CHANNEL, or DISCORD_WEBHOOK_URL.")
         return
     
     print("Notification target(s) configured correctly.")
@@ -320,6 +353,8 @@ def main():
         print("- GitHub Discussion is enabled.")
     if has_slack_target:
         print("- Slack Notification is enabled.")
+    if has_discord_target:
+        print("- Discord Notification is enabled.")
 
     # --- State and Commit Fetching ---
     print("\n--- 3. Fetching Commits ---")
@@ -368,14 +403,24 @@ def main():
         else:
             print("\n--- 5b. Slack target not configured. Skipping. ---")
 
+        # --- 5c. Post to Discord ---
+        if has_discord_target:
+            print("\n--- 5c. Posting to Discord ---")
+            send_discord_notification(discord_webhook_url, report_body, report_title)
+        else:
+            print("\n--- 5c. Discord target not configured. Skipping. ---")
+
     else:
         print("Failed to generate report from AI. No content to post.")
         # Notify on AI failure
+        error_message = "Error: Failed to generate the report from AI. No content is available."
+        report_title = f"Unreal Engine Daily Report - {time.strftime('%Y-%m-%d')}"
         if has_slack_target:
             print("\n--- Handling Slack Notification for AI Failure ---")
-            report_title = f"Unreal Engine Daily Report - {time.strftime('%Y-%m-%d')}"
-            slack_message = "Error: Failed to generate the report from AI. No content is available."
-            send_slack_notification(slack_webhook_url, slack_channel, slack_message, report_title)
+            send_slack_notification(slack_webhook_url, slack_channel, error_message, report_title)
+        if has_discord_target:
+            print("\n--- Handling Discord Notification for AI Failure ---")
+            send_discord_notification(discord_webhook_url, error_message, report_title)
 
     # --- Finish ---
     print("\n=============================================")

@@ -16,6 +16,29 @@
 -   **AIによる要約:** Gemini APIがコミット内容を分析し、「新機能」「仕様変更」などのカテゴリに分類し、内容を要約します。
 -   **Discussionへの投稿:** 生成されたレポートを、リポジリのGitHub Discussionsに「Unreal Engine Daily Report」として投稿します。
 -   **Slack通知:** レポートの内容を、指定したSlackチャンネルにも同時に通知できます。
+-   **Discord通知:** レポートの内容を、指定したDiscordチャンネルにも同時に通知できます。
+
+## 🚀 最新レポートを購読する
+
+このツールを自分でセットアップしなくても、更新レポートの結果を購読できます。
+以下のリポジトリでは、毎日定時に生成されたレポートがGitHub Discussionsに投稿されています。
+
+[**UnrealEngine-UpdateTrackerReport リポジトリを購読する**](https://github.com/pafuhana1213/UnrealEngine-UpdateTrackerReport)
+
+**注意:** このレポートリポジトリはプライベートであり、閲覧するには[Unreal Engineのソースコードリポジトリへのアクセスが許可されたGitHubアカウント](https://www.unrealengine.com/ja/ue-on-github)が必要です。
+
+## ✨ よろしければご支援を！
+
+このツールが、皆さんの日々のUEキャッチアップに少しでも役立っていれば、とても嬉しいです。
+
+開発は一個人が趣味と実益を兼ねて、コーヒー代やAPI利用料を自腹でやりくりしながら進めています☕
+もし「このツール、なかなか良いじゃん！」と思っていただけたら、GitHub Sponsorsで応援していただけると、開発の大きな励みになります。
+
+[💖 **GitHub Sponsorsで応援する**](https://github.com/sponsors/pafuhana1213)
+
+---
+
+**ここから先は、ご自身でこのツールをフォークしてカスタマイズしたい方向けのドキュメントです。**
 
 ## 🛠️ セットアップ方法
 
@@ -28,7 +51,7 @@
     -   `GEMINI_API_KEY`: [Google AI Studio](https://aistudio.google.com/app/apikey) で取得したAPIキーを登録します。
 
 3.  **通知先の設定 (少なくとも1つ必須):**
-    次に、レポートの通知先を選択し、設定します。**GitHub Discussion** と **Slack** のどちらか、または両方を設定できます。
+    次に、レポートの通知先を選択し、設定します。**GitHub Discussion**, **Slack**, **Discord** のいずれか、またはすべてを設定できます。
     
     #### A) GitHub Discussionへの投稿設定
     チームでの議論や記録の永続化に適しています。
@@ -44,6 +67,12 @@
     2.  **シークレットを追加:** 以下のシークレットを登録します。
         -   `SLACK_WEBHOOK_URL`: 上記で発行したIncoming WebhookのURL。
         -   `SLACK_CHANNEL`: 通知を投稿するSlackチャンネル名（例: `#ue-updates`）。
+
+    #### C) Discordへの投稿設定
+    Slackと同様に、リアルタイムな通知に適しています。
+    1.  **Webhookを作成:** [Discordのドキュメント](https://support.discord.com/hc/ja/articles/228383668-%E3%82%B5%E3%83%BC%E3%83%90%E3%83%BC%E3%81%A7Webhooks%E3%82%92%E4%BD%BF%E3%81%86%E3%81%AB%E3%81%AF)に従い、**通知したいチャンネル用のWebhook URL**を作成します。Discordでは、このURL自体が投稿先チャンネルを決定するため、Slackのように別途チャンネル名を指定する必要はありません。
+    2.  **シークレットを追加:** 以下のシークレットを登録します。
+        -   `DISCORD_WEBHOOK_URL`: 上記で作成したWebhookのURL。
 
  **⚠️ 重要: 安全な運用に関する推奨事項**
  Unreal Engineの更新履歴は、Epic Gamesのライセンス契約に基づき、許可されたアカウントのみがアクセスできる機密情報です。意図しない情報漏洩を防ぐため、このツールは**少なくとも1つの通知先が設定されていないと動作を停止します。**
@@ -61,6 +90,7 @@
     -   **Gemini Model:** 解析に使用するAIモデル名。デフォルトは `gemini-2.5-pro` です。
     -   **Slack Webhook URL:** 一時的に使用するSlack Webhook URL。Secretの値を上書きします。
     -   **Slack Channel:** 一時的に使用するSlackチャンネル名。Secretの値を上書きします。
+    -   **Discord Webhook URL:** 一時的に使用するDiscord Webhook URL。Secretの値を上書きします。
 
 -   **各種デフォルト値の変更:**
     スケジュール実行時や手動実行時のデフォルト値は、リポジトリの **Variables** で設定することで変更できます。`Settings` > `Secrets and variables` > `Actions` の `Variables` タブから、以下の変数を設定します。
@@ -98,11 +128,3 @@
 
 ---
 
-## ✨ よろしければご支援を！
-
-このツールが、皆さんの日々のUEキャッチアップに少しでも役立っていれば、とても嬉しいです。
-
-開発は一個人が趣味と実益を兼ねて、コーヒー代やAPI利用料を自腹でやりくりしながら進めています☕
-もし「このツール、なかなか良いじゃん！」と思っていただけたら、GitHub Sponsorsで応援していただけると、開発の大きな励みになります。
-
-[💖 **GitHub Sponsorsで応援する**](https://github.com/sponsors/pafuhana1213)
