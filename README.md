@@ -15,30 +15,41 @@
 -   **自動更新チェック:** GitHub Actionsを使い、スケジュール（毎日日本時間午前8時 / UTC 23:00）または手動でUEリポジトリの最新コミットをチェックします。
 -   **AIによる要約:** Gemini APIがコミット内容を分析し、「新機能」「仕様変更」などのカテゴリに分類し、内容を要約します。
 -   **Discussionへの投稿:** 生成されたレポートを、リポジリのGitHub Discussionsに「Unreal Engine Daily Report」として投稿します。
+-   **Slack通知:** レポートの内容を、指定したSlackチャンネルにも同時に通知できます。
 
 ## 🛠️ セットアップ方法
 
 1.  **このリポジトリをフォーク (Fork):**
-    右上の **Fork** ボタンをクリックして、このリポジトリを自身のGitHubアカウントにコピーします。これにより、GitHub Actionsのワークフローが自分のアカウントで実行できるようになります。
+    右上の **Fork** ボタンをクリックして、このリポジトリを自身のGitHubアカウントにコピーします。
 
-2.  **GitHub Discussionsを有効化:**
-    リポジトリの `Settings` > `General` > `Features` に移動し、`Discussions` にチェックを入れて有効化します。
-
-3.  **Discussionカテゴリの作成:**
-    Discussionsタブで、レポートを投稿するためのカテゴリを作成します（例: `Announcements` や `Daily Reports`）。
-
-4.  **リポジトリのSecretsを設定:**
-    リポジトリの `Settings` > `Secrets and variables` > `Actions` に移動し、以下のリポジトリシークレットを登録します。
+2.  **基本シークレットの設定:**
+    まず、ツールの動作に必須となる以下のシークレットを、リポジトリの `Settings` > `Secrets and variables` > `Actions` に登録します。
     -   `UE_REPO_PAT`: Unreal Engineのプライベートリポジトリ (`EpicGames/UnrealEngine`) への読み取りアクセス権を持つ[Personal Access Token (PAT)](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)を登録します。
     -   `GEMINI_API_KEY`: [Google AI Studio](https://aistudio.google.com/app/apikey) で取得したAPIキーを登録します。
-    -   `DISCUSSION_REPO`: レポートを投稿する先の**プライベート**リポジトリ名（例: `MyOrg/MyTeamRepo`）。
-    -   `DISCUSSION_REPO_PAT`: `DISCUSSION_REPO`で指定したリポジトリにDiscussionを書き込む権限を持つPAT。
-  
- **⚠️ 重要: 安全な運用に関する推奨事項**  
- Unreal Engineの更新履歴は、Epic Gamesのライセンス契約に基づき、許可されたアカウントのみがアクセスできる機密情報です。意図しない情報漏洩を防ぐため、このツールは `DISCUSSION_REPO` と `DISCUSSION_REPO_PAT` が設定されていないと**動作を停止する仕様**になっています。
+
+3.  **通知先の設定 (少なくとも1つ必須):**
+    次に、レポートの通知先を選択し、設定します。**GitHub Discussion** と **Slack** のどちらか、または両方を設定できます。
+    
+    #### A) GitHub Discussionへの投稿設定
+    チームでの議論や記録の永続化に適しています。
+    1.  **Discussionsを有効化:** レポート投稿先リポジトリの `Settings` > `General` > `Features` で `Discussions` を有効化します。
+    2.  **カテゴリを作成:** Discussionsタブでカテゴリを作成します（例: `Announcements`）。
+    3.  **シークレットを追加:** 以下のシークレットを登録します。
+        -   `DISCUSSION_REPO`: レポートを投稿する先の**プライベート**リポジトリ名（例: `MyOrg/MyTeamRepo`）。
+        -   `DISCUSSION_REPO_PAT`: `DISCUSSION_REPO`にDiscussionを書き込む権限を持つPAT。
+
+    #### B) Slackへの投稿設定
+    リアルタイムな通知と迅速な情報共有に適しています。
+    1.  **Incoming Webhookを作成:** [Slackのドキュメント](https://slack.com/intl/ja-jp/help/articles/115005265063-Slack-%E3%81%A7%E3%81%AE-Incoming-Webhook-%E3%81%AE%E5%88%A9%E7%94%A8)に従い、通知したいチャンネル用のWebhook URLを発行します。
+    2.  **シークレットを追加:** 以下のシークレットを登録します。
+        -   `SLACK_WEBHOOK_URL`: 上記で発行したIncoming WebhookのURL。
+        -   `SLACK_CHANNEL`: 通知を投稿するSlackチャンネル名（例: `#ue-updates`）。
+
+ **⚠️ 重要: 安全な運用に関する推奨事項**
+ Unreal Engineの更新履歴は、Epic Gamesのライセンス契約に基づき、許可されたアカウントのみがアクセスできる機密情報です。意図しない情報漏洩を防ぐため、このツールは**少なくとも1つの通知先が設定されていないと動作を停止します。**
 
 **推奨される設定:**
-レポートの投稿先 (`DISCUSSION_REPO`) には、**Unreal Engineのソースコードリポジトリのフォーク、または同等のアクセス権を持つメンバーのみが参加している別のプライベートリポジトリ**を指定することを強く推奨します。これにより、ライセンス契約を遵守し、安全に情報を共有できます。
+レポートの投稿先（`DISCUSSION_REPO`またはSlackチャンネル）は、**Unreal Engineのソースコードリポジトリのフォーク、または同等のアクセス権を持つメンバーのみが参加しているプライベートな場所**を指定することを強く推奨します。これにより、ライセンス契約を遵守し、安全に情報を共有できます。
 
 ## 🏃‍♀️ 実行方法
 
@@ -48,6 +59,8 @@
     -   **Commit Scan Limit:** 手動実行時にスキャンする最新コミット数を指定できます。（デフォルト: 過去24時間）
     -   **Discussion Category:** レポートを投稿するDiscussionカテゴリ名。デフォルトは `Daily Reports` です。
     -   **Gemini Model:** 解析に使用するAIモデル名。デフォルトは `gemini-2.5-pro` です。
+    -   **Slack Webhook URL:** 一時的に使用するSlack Webhook URL。Secretの値を上書きします。
+    -   **Slack Channel:** 一時的に使用するSlackチャンネル名。Secretの値を上書きします。
 
 -   **各種デフォルト値の変更:**
     スケジュール実行時や手動実行時のデフォルト値は、リポジトリの **Variables** で設定することで変更できます。`Settings` > `Secrets and variables` > `Actions` の `Variables` タブから、以下の変数を設定します。

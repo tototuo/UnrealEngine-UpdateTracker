@@ -19,6 +19,14 @@ on:
         description: 'The Gemini model to use for analysis. Default: gemini-2.5-pro'
         required: false
         default: ''
+      slack_webhook_url:
+        description: 'Slack Webhook URL for notifications. Overrides secret.'
+        required: false
+        default: ''
+      slack_channel:
+        description: 'Slack channel to post to. Overrides secret.'
+        required: false
+        default: ''
   schedule:
     # Runs every day at 23:00 UTC (which is 8:00 AM JST)
     - cron: '0 23 * * *'
@@ -49,6 +57,8 @@ jobs:
       DISCUSSION_CATEGORY: ${{ github.event.inputs.discussion_category || vars.DISCUSSION_CATEGORY || 'Daily Reports' }}
       COMMIT_SCAN_LIMIT: ${{ github.event.inputs.commit_scan_limit }}
       GITHUB_REPOSITORY: ${{ github.repository }}
+      SLACK_WEBHOOK_URL: ${{ github.event.inputs.slack_webhook_url || secrets.SLACK_WEBHOOK_URL }}
+      SLACK_CHANNEL: ${{ github.event.inputs.slack_channel || secrets.SLACK_CHANNEL }}
 
     steps:
       - name: Checkout repository

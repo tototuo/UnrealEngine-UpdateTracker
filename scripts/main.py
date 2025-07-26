@@ -221,6 +221,49 @@ def create_discussion(repo_name, title, body, pat, category_name="Daily Reports"
         return False
 
 
+def send_slack_notification(webhook_url, channel, message_text, title):
+    """Sends a notification to a Slack channel via a webhook."""
+    print("---")
+    print("Sending Slack notification...")
+    try:
+        # Slack's mrkdwn format is slightly different from GitHub's.
+        # We'll send the title as a main header and the body as the rest of the message.
+        payload = {
+            "channel": channel,
+            "username": "UE Update Tracker",
+            "icon_emoji": ":robot_face:",
+            "text": f"*{title}*", # Fallback text for notifications
+            "blocks": [
+                {
+                    "type": "header",
+                    "text": {
+                        "type": "plain_text",
+                        "text": title,
+                        "emoji": True
+                    }
+                },
+                {
+                    "type": "divider"
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": message_text
+                    }
+                }
+            ]
+        }
+        
+        response = requests.post(webhook_url, json=payload)
+        response.raise_for_status() # Raise an exception for bad status codes
+        print("Successfully sent Slack notification.")
+        return True
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred while sending Slack notification: {e}")
+        return False
+
+
 def main():
     """
     Main function to execute the update check.
@@ -258,8 +301,28 @@ def main():
         print(f"FATAL: Failed to initialize APIs: {e}")
         return
 
+    # --- Notification Target Check ---
+    print("\n--- 2. Checking Notification Targets ---")
+    discussion_repo_name = os.environ.get("DISCUSSION_REPO")
+    discussion_repo_pat = os.environ.get("DISCUSSION_REPO_PAT")
+    slack_webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
+    slack_channel = os.environ.get("SLACK_CHANNEL")
+
+    has_discussion_target = discussion_repo_name and discussion_repo_pat
+    has_slack_target = slack_webhook_url and slack_channel
+
+    if not has_discussion_target and not has_slack_target:
+        print("FATAL: No notification target is configured. Please set either DISCUSSION_REPO/DISCUSSION_REPO_PAT or SLACK_WEBHOOK_URL/SLACK_CHANNEL in your repository secrets.")
+        return
+    
+    print("Notification target(s) configured correctly.")
+    if has_discussion_target:
+        print("- GitHub Discussion is enabled.")
+    if has_slack_target:
+        print("- Slack Notification is enabled.")
+
     # --- State and Commit Fetching ---
-    print("\n--- 2. Fetching Commits ---")
+    print("\n--- 3. Fetching Commits ---")
     new_commits = fetch_new_commits(github_client)
 
     if new_commits is None:
@@ -271,7 +334,7 @@ def main():
         return
 
     # --- Process Commits ---
-    print("\n--- 3. Analyzing New Commits ---")
+    print("\n--- 4. Analyzing New Commits ---")
     important_commits = [commit for commit in new_commits if filter_commit(commit)]
     
     if not important_commits:
@@ -281,7 +344,7 @@ def main():
     print(f"Found {len(important_commits)} potentially important commits to analyze.")
 
     # --- Generate Report and Post Discussion ---
-    print("\n--- 4. Generating Report ---")
+    print("\n--- 5. Generating and Sending Report ---")
     report_language = os.environ.get("REPORT_LANGUAGE", "Japanese")
     print(f"Report language set to: {report_language}")
     report_body = analyze_commits_in_bulk(ai_model, important_commits, report_language)
@@ -289,34 +352,34 @@ def main():
     if report_body:
         report_title = f"Unreal Engine Daily Report - {time.strftime('%Y-%m-%d')}"
         
-        # --- Discussion Target Validation ---
-        # To prevent accidental information leakage, posting to a specific, private
-        # repository is mandatory. These environment variables MUST be set.
-        discussion_repo_name = os.environ.get("DISCUSSION_REPO")
-        discussion_repo_pat = os.environ.get("DISCUSSION_REPO_PAT")
+        # --- 5a. Post to GitHub Discussion ---
+        if has_discussion_target:
+            print("\n--- 5a. Posting to GitHub Discussion ---")
+            discussion_category = os.environ.get("DISCUSSION_CATEGORY", "Daily Reports")
+            print(f"Attempting to post to repository '{discussion_repo_name}' in category: '{discussion_category}'")
+            create_discussion(discussion_repo_name, report_title, report_body, discussion_repo_pat, category_name=discussion_category)
+        else:
+            print("\n--- 5a. GitHub Discussion target not configured. Skipping. ---")
 
-        if not discussion_repo_name:
-            print("FATAL: DISCUSSION_REPO environment variable is not set.")
-            print("This must be set to the target repository (e.g., 'owner/repo-name') to prevent accidental leaks.")
-            return
+        # --- 5b. Post to Slack ---
+        if has_slack_target:
+            print("\n--- 5b. Posting to Slack ---")
+            send_slack_notification(slack_webhook_url, slack_channel, report_body, report_title)
+        else:
+            print("\n--- 5b. Slack target not configured. Skipping. ---")
 
-        if not discussion_repo_pat:
-            print("FATAL: DISCUSSION_REPO_PAT environment variable is not set.")
-            print("A Personal Access Token with 'discussion:write' permissions for the target repository is required.")
-            return
-            
-        discussion_category = os.environ.get("DISCUSSION_CATEGORY", "Daily Reports")
-        
-        print(f"Attempting to post to repository '{discussion_repo_name}' in category: '{discussion_category}'")
-        create_discussion(discussion_repo_name, report_title, report_body, discussion_repo_pat, category_name=discussion_category)
     else:
-        print("Failed to generate report from AI. Skipping discussion post.")
+        print("Failed to generate report from AI. No content to post.")
+        # Notify on AI failure
+        if has_slack_target:
+            print("\n--- Handling Slack Notification for AI Failure ---")
+            report_title = f"Unreal Engine Daily Report - {time.strftime('%Y-%m-%d')}"
+            slack_message = "Error: Failed to generate the report from AI. No content is available."
+            send_slack_notification(slack_webhook_url, slack_channel, slack_message, report_title)
 
-    # --- Save State ---
-    # State saving is no longer needed as we fetch by time window
-    
+    # --- Finish ---
     print("\n=============================================")
-    print("Update Check Script Finished Successfully")
+    print("Update Check Script Finished")
     print("=============================================")
 
 if __name__ == "__main__":
