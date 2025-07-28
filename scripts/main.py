@@ -74,7 +74,7 @@ def analyze_commits_in_bulk(model, commits, report_language="Japanese"):
     Analyzes a list of commits in bulk with the Gemini API and returns a formatted Markdown report.
     """
     print(f"Aggregating {len(commits)} commits for bulk analysis...")
-    
+
     commits_data = []
     for commit in commits:
         # IMPORTANT: To comply with Epic Games' license and prevent leaking sensitive information,
@@ -90,41 +90,46 @@ Files Changed:
 {file_list}
 """
         commits_data.append(commit_info)
-    
+
     aggregated_commits = "\n".join(commits_data)
 
     try:
         # Load the prompt from the external file
-        with open("prompts/report_prompt.md", "r", encoding="utf-8") as f:
+        prompt_filename = "report_prompt.md"
+        if report_language == "Chinese":
+            prompt_filename = "report_prompt_cn.md"
+
+        with open(f"prompts/{prompt_filename}", "r", encoding="utf-8") as f:
             prompt_template = f.read()
-        
+
         prompt = prompt_template.format(
             report_language=report_language,
             aggregated_commits=aggregated_commits
         )
 
         print(f"  > Sending aggregated prompt to Gemini for {len(commits)} commits (Language: {report_language})...")
-        
+
         # --- Start of Detailed Logging ---
         # print(f"\n--- BULK PROMPT ---\n{prompt}\n--------------------")
         # --- End of Detailed Logging ---
 
         response = model.generate_content(prompt)
-        
+
         # --- Start of Detailed Logging ---
         print(f"--- BULK RESPONSE ---\n{response.text}\n--------------------\n")
         # --- End of Detailed Logging ---
 
         print(f"  < Received bulk response from Gemini.")
-        
+
         return response.text
 
     except FileNotFoundError:
-        print("FATAL: prompts/report_prompt.md not found.")
+        print(f"FATAL: prompts/{prompt_filename} not found.")
         return None
     except Exception as e:
         print(f"Error analyzing commits in bulk with AI: {e}")
         return None
+
 
 
 def _run_graphql_query(query, variables, pat):
