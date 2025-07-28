@@ -1,130 +1,120 @@
-# Unreal Engine Update Tracker
+以下是日语 README 的中文翻译：
+
+---
+
+# **虚幻引擎更新追踪器**
 
 [English version](README.en.md)
 
-このプロジェクトは、Unreal EngineのプライベートGitHubリポジトリの更新を定期的に監視し、AI（Google Gemini）を使って重要な変更（新機能、仕様変更など）を要約し、GitHub Discussionsにレポートとして投稿する自動化サービスです。
+本项目是一个自动化服务，定期监控虚幻引擎私有 GitHub 仓库的更新，使用 AI（Google Gemini）总结关键变更（如新功能、规格变动等），并将报告发布到 GitHub Discussions。
 
 <table><tr><td>
-<img width="644" alt="image" src="https://github.com/pafuhana1213/Screenshot/blob/master/Report_sample_jp.png" />
+<img width="644" alt="报告示例" src="https://github.com/pafuhana1213/Screenshot/blob/master/Report_sample_jp.png" />
 </td></tr></table>
 
-注意：この画像はレポートの例であり、書かれている内容は完全にダミーです。UnrealEngineで実際に行われた更新内容ではありません。
+> 注意：此图片为报告示例，内容完全为虚拟数据，并非虚幻引擎的真实更新内容。
 
-## 🌟 主な機能
+## 🌟 核心功能
 
--   **自動更新チェック:** GitHub Actionsを使い、スケジュール（毎日日本時間午前8時 / UTC 23:00）または手動でUEリポジトリの最新コミットをチェックします。
--   **AIによる要約:** Gemini APIがコミット内容を分析し、「新機能」「仕様変更」などのカテゴリに分類し、内容を要約します。
--   **Discussionへの投稿:** 生成されたレポートを、リポジリのGitHub Discussionsに「Unreal Engine Daily Report」として投稿します。
--   **Slack通知:** レポートの内容を、指定したSlackチャンネルにも同時に通知できます。
--   **Discord通知:** レポートの内容を、指定したDiscordチャンネルにも同時に通知できます。
+-   **自动更新检查:** 通过 GitHub Actions 按计划（每日北京时间早8点 / UTC 23:00）或手动检查 UE 仓库的最新提交。
+-   **AI智能摘要:** 使用 Gemini API 分析提交内容，按「新功能」「规格变更」等类别分类并总结。
+-   **讨论区发布:** 将生成的报告以「虚幻引擎每日报告」形式发布到仓库的 GitHub Discussions。
+-   **Slack通知:** 同时将报告内容推送到指定 Slack 频道。
+-   **Discord通知:** 同时将报告内容推送到指定 Discord 频道。
 
-## 🚀 最新レポートを購読する
+## 🚀 订阅最新报告
 
-このツールを自分でセットアップしなくても、更新レポートの結果を購読できます。
-以下のリポジトリでは、毎日定時に生成されたレポートがGitHub Discussionsに投稿されています。
+无需自行部署工具，即可订阅更新报告。以下仓库每日定时在 GitHub Discussions 发布生成报告：  
+[**订阅 UnrealEngine-UpdateTrackerReport 仓库**](https://github.com/pafuhana1213/UnrealEngine-UpdateTrackerReport)
 
-[**UnrealEngine-UpdateTrackerReport リポジトリを購読する**](https://github.com/pafuhana1213/UnrealEngine-UpdateTrackerReport)
+> **重要:** 此报告仓库为私有仓库，查看需具备 [访问虚幻引擎源代码仓库权限的 GitHub 账号](https://www.unrealengine.com/ja/ue-on-github)。
 
-**注意:** このレポートリポジトリはプライベートであり、閲覧するには[Unreal Engineのソースコードリポジトリへのアクセスが許可されたGitHubアカウント](https://www.unrealengine.com/ja/ue-on-github)が必要です。
+## ✨ 支持项目发展
 
-## ✨ よろしければご支援を！
-
-このツールが、皆さんの日々のUEキャッチアップに少しでも役立っていれば、とても嬉しいです。
-
-開発は一個人が趣味と実益を兼ねて、コーヒー代やAPI利用料を自腹でやりくりしながら進めています☕
-もし「このツール、なかなか良いじゃん！」と思っていただけたら、GitHub Sponsorsで応援していただけると、開発の大きな励みになります。
-
-[💖 **GitHub Sponsorsで応援する**](https://github.com/sponsors/pafuhana1213)
+若此工具对您的 UE 日常跟进有所帮助，我将深感荣幸！  
+本项目由个人开发者利用业余时间开发，咖啡费和 API 使用成本均为自费承担 ☕  
+如果您认为「这个工具很棒！」，欢迎通过 GitHub Sponsors 支持，这将成为开发的巨大动力：  
+[💖 **通过 GitHub Sponsors 支持**](https://github.com/sponsors/pafuhana1213)
 
 ---
 
-**ここから先は、ご自身でこのツールをフォークしてカスタマイズしたい方向けのドキュメントです。**
+**以下是为想要自定义部署本工具的用户提供的文档。**
 
-## 🛠️ セットアップ方法
+## 🛠️ 部署指南
 
-1.  **このリポジトリをフォーク (Fork):**
-    右上の **Fork** ボタンをクリックして、このリポジトリを自身のGitHubアカウントにコピーします。
+1.  **复刻仓库:**  
+    点击右上角 **Fork** 按钮，将仓库复制到您的 GitHub 账户。
 
-2.  **基本シークレットの設定:**
-    まず、ツールの動作に必須となる以下のシークレットを、リポジトリの `Settings` > `Secrets and variables` > `Actions` に登録します。
-    -   `UE_REPO_PAT`: Unreal Engineのプライベートリポジトリ (`EpicGames/UnrealEngine`) への読み取りアクセス権を持つ[Personal Access Token (PAT)](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)を登録します。
-    -   `GEMINI_API_KEY`: [Google AI Studio](https://aistudio.google.com/app/apikey) で取得したAPIキーを登録します。
+2.  **配置基础密钥:**  
+    在仓库的 `Settings` > `Secrets and variables` > `Actions` 中添加必需密钥：
+    -   `UE_REPO_PAT`: 拥有虚幻引擎私有仓库 (`EpicGames/UnrealEngine`) 读取权限的 [Personal Access Token (PAT)](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)。
+    -   `GEMINI_API_KEY`: 从 [Google AI Studio](https://aistudio.google.com/app/apikey) 获取的 API 密钥。
 
-3.  **通知先の設定 (少なくとも1つ必須):**
-    次に、レポートの通知先を選択し、設定します。**GitHub Discussion**, **Slack**, **Discord** のいずれか、またはすべてを設定できます。
-    
-    #### A) GitHub Discussionへの投稿設定
-    チームでの議論や記録の永続化に適しています。
-    1.  **Discussionsを有効化:** レポート投稿先リポジトリの `Settings` > `General` > `Features` で `Discussions` を有効化します。
-    2.  **カテゴリを作成:** Discussionsタブでカテゴリを作成します（例: `Announcements`）。
-    3.  **シークレットを追加:** 以下のシークレットを登録します。
-        -   `DISCUSSION_REPO`: レポートを投稿する先の**プライベート**リポジトリ名（例: `MyOrg/MyTeamRepo`）。
-        -   `DISCUSSION_REPO_PAT`: `DISCUSSION_REPO`にDiscussionを書き込む権限を持つPAT。
+3.  **配置通知目标 (至少需设置一项):**  
+    #### A) GitHub Discussion 发布设置  
+    适合团队讨论和长期存档。
+    1.  **启用 Discussions:** 在目标仓库的 `Settings` > `General` > `Features` 启用 Discussions。
+    2.  **创建分类:** 在 Discussions 标签页创建分类（如 `Announcements`）。
+    3.  **添加密钥:**  
+        -   `DISCUSSION_REPO`: 目标**私有**仓库名（例: `MyOrg/MyTeamRepo`）。
+        -   `DISCUSSION_REPO_PAT`: 拥有 `DISCUSSION_REPO` 写入权限的 PAT。
 
-    #### B) Slackへの投稿設定
-    リアルタイムな通知と迅速な情報共有に適しています。
-    1.  **Incoming Webhookを作成:** [Slackのドキュメント](https://slack.com/intl/ja-jp/help/articles/115005265063-Slack-%E3%81%A7%E3%81%AE-Incoming-Webhook-%E3%81%AE%E5%88%A9%E7%94%A8)に従い、通知したいチャンネル用のWebhook URLを発行します。
-    2.  **シークレットを追加:** 以下のシークレットを登録します。
-        -   `SLACK_WEBHOOK_URL`: 上記で発行したIncoming WebhookのURL。
-        -   `SLACK_CHANNEL`: 通知を投稿するSlackチャンネル名（例: `#ue-updates`）。
+    #### B) Slack 通知设置  
+    适合实时通知与快速共享。
+    1.  **创建 Incoming Webhook:** 按 [Slack 文档](https://slack.com/intl/ja-jp/help/articles/115005265063-Slack-%E3%81%A7%E3%81%AE-Incoming-Webhook-%E3%81%AE%E5%88%A9%E7%94%A8)生成 Webhook URL。
+    2.  **添加密钥:**  
+        -   `SLACK_WEBHOOK_URL`: 生成的 Webhook URL。
+        -   `SLACK_CHANNEL`: 通知频道名（例: `#ue-updates`）。
 
-    #### C) Discordへの投稿設定
-    Slackと同様に、リアルタイムな通知に適しています。
-    1.  **Webhookを作成:** [Discordのドキュメント](https://support.discord.com/hc/ja/articles/228383668-%E3%82%B5%E3%83%BC%E3%83%90%E3%83%BC%E3%81%A7Webhooks%E3%82%92%E4%BD%BF%E3%81%86%E3%81%AB%E3%81%AF)に従い、**通知したいチャンネル用のWebhook URL**を作成します。Discordでは、このURL自体が投稿先チャンネルを決定するため、Slackのように別途チャンネル名を指定する必要はありません。
-    2.  **シークレットを追加:** 以下のシークレットを登録します。
-        -   `DISCORD_WEBHOOK_URL`: 上記で作成したWebhookのURL。
+    #### C) Discord 通知设置  
+    类似 Slack，适合实时通知。
+    1.  **创建 Webhook:** 按 [Discord 文档](https://support.discord.com/hc/ja/articles/228383668-%E3%82%B5%E3%83%BC%E3%83%90%E3%83%BC%E3%81%A7Webhooks%E3%82%92%E4%BD%BF%E3%81%86%E3%81%AB%E3%81%AF)生成 Webhook URL（URL 本身已包含频道信息，无需额外指定）。
+    2.  **添加密钥:**  
+        -   `DISCORD_WEBHOOK_URL`: 生成的 Webhook URL。
 
- **⚠️ 重要: 安全な運用に関する推奨事項**
- Unreal Engineの更新履歴は、Epic Gamesのライセンス契約に基づき、許可されたアカウントのみがアクセスできる機密情報です。意図しない情報漏洩を防ぐため、このツールは**少なくとも1つの通知先が設定されていないと動作を停止します。**
+> **⚠️ 安全运营准则**  
+> 虚幻引擎更新内容受 Epic Games 许可协议保护，仅限授权账号访问。  
+> **为防止信息泄露，未配置至少一个通知目标时工具将停止运行。**  
+> **强烈建议:** 报告发布目标（`DISCUSSION_REPO` 或 Slack 频道）需设置为 **仅限拥有 UE 源代码访问权限的成员可访问的私有空间**（如 UE 仓库复刻库），以确保合规。
 
-**推奨される設定:**
-レポートの投稿先（`DISCUSSION_REPO`またはSlackチャンネル）は、**Unreal Engineのソースコードリポジトリのフォーク、または同等のアクセス権を持つメンバーのみが参加しているプライベートな場所**を指定することを強く推奨します。これにより、ライセンス契約を遵守し、安全に情報を共有できます。
+## 🏃‍♀️ 运行方式
 
-## 🏃‍♀️ 実行方法
+-   **自动运行:** 按计划自动执行（默认每日北京时间早8点 / UTC 23:00）。
+-   **手动运行:** 在仓库的 `Actions` 标签页选择 `Unreal Engine Update Tracker` 工作流，点击 `Run workflow`（**仅管理员可操作**）：  
+    -   **Report Language:** 报告语言（例: `Japanese`, `English`），默认 `Japanese`。
+    -   **Commit Scan Limit:** 扫描的最近提交数（默认：过去24小时）。
+    -   **Discussion Category:** Discussion 分类名，默认 `Daily Reports`。
+    -   **Gemini Model:** 使用的 AI 模型，默认 `gemini-2.5-pro`。
+    -   **Slack/Discord Webhook URL:** 临时覆盖密钥值。
+    -   **Slack Channel:** 临时覆盖频道名。
 
--   **自動実行:** 設定されたスケジュール（デフォルトでは毎日日本時間午前8時 / UTC 23:00）になると、自動的にワークフローが実行されます。
--   **手動実行:** リポジトリの`Actions`タブに移動し、`Unreal Engine Update Tracker`ワークフローを選択して、`Run workflow`ボタンから手動で実行することも可能です。**注意: 手動実行はリポジトリの管理者のみが可能です。**
-    -   **Report Language:** レポートを出力したい言語を自由に入力します（例: `Japanese`, `English`）。デフォルトは `Japanese` です。
-    -   **Commit Scan Limit:** 手動実行時にスキャンする最新コミット数を指定できます。（デフォルト: 過去24時間）
-    -   **Discussion Category:** レポートを投稿するDiscussionカテゴリ名。デフォルトは `Daily Reports` です。
-    -   **Gemini Model:** 解析に使用するAIモデル名。デフォルトは `gemini-2.5-pro` です。
-    -   **Slack Webhook URL:** 一時的に使用するSlack Webhook URL。Secretの値を上書きします。
-    -   **Slack Channel:** 一時的に使用するSlackチャンネル名。Secretの値を上書きします。
-    -   **Discord Webhook URL:** 一時的に使用するDiscord Webhook URL。Secretの値を上書きします。
+-   **修改默认值:**  
+    在 `Settings` > `Secrets and variables` > `Actions` > `Variables` 设置以下变量：
+    -   `REPORT_LANGUAGE`: 默认报告语言（例: `English`）
+    -   `DISCUSSION_CATEGORY`: 默认分类名（例: `Daily Reports`）
+    -   `GEMINI_MODEL`: 默认 AI 模型（例: `gemini-2.5-pro`）
+    -   `UE_BRANCH`: 监控的分支（例: `release`），默认为 `ue5-main`。
 
--   **各種デフォルト値の変更:**
-    スケジュール実行時や手動実行時のデフォルト値は、リポジトリの **Variables** で設定することで変更できます。`Settings` > `Secrets and variables` > `Actions` の `Variables` タブから、以下の変数を設定します。
-    -   `REPORT_LANGUAGE`: デフォルトのレポート言語（例: `English`）
-    -   `DISCUSSION_CATEGORY`: デフォルトの投稿先カテゴリ名（例: `Daily Reports`）
-    -   `GEMINI_MODEL`: デフォルトで使用するAIモデル（例: `gemini-2.5-pro`）
-    -   `UE_BRANCH`: 監視対象のブランチ名（例: `release`）。デフォルトは `ue5-main` です。
+## 🎨 自定义配置
 
-## 🎨 カスタマイズ
+### 修改报告格式
+报告分类、摘要风格等由 AI 提示词（prompt）控制。  
+如需调整格式，请直接编辑根目录的 `prompts/report_prompt.md` 文件，无需修改 Python 代码。
 
-### レポートフォーマットの変更
+## 📝 许可协议与重要声明
 
-レポートのカテゴリ、要約のスタイル、全体の構成など、出力されるフォーマットはAIへの指示（プロンプト）によって決定されます。
+**使用前请务必阅读：**
 
-より詳細なレポートが欲しい、あるいは特定の情報を強調したいなど、フォーマットを自由に変更したい場合は、リポジトリのルートにある `prompts/report_prompt.md` ファイルを直接編集してください。このファイルを変更することで、Pythonコードに触れることなく、AIの振る舞いをカスタマイズできます。
+-   **用户责任:** 本工具设计符合 UE 许可协议，但最终责任由用户承担。**必须将 `DISCUSSION_REPO` 设置为访问受限的私有仓库**，公开发布可能导致违约。
+-   **API 密钥与费用:**  
+    -   使用 Google Gemini API 可能产生费用。  
+    -   **复刻本仓库的用户需自行承担 API 费用。**  
+    -   **强烈建议使用禁止 AI 学习数据的 API 密钥以符合 UE 条款。**
+-   **安全设计:**  
+    -   为降低合规风险，**工具不会向 AI 发送 UE 源代码或差异文件**，仅分析提交消息和文件路径。
+-   **运行注意:**  
+    -   本脚本会实际发布内容，测试时请谨慎。  
+    -   各 API 存在使用限制（速率限制）。
 
-## 📝 ライセンスと利用上の注意 (License and Important Notices)
-
-**本ツールを利用する前に、以下の内容を必ずお読みください。**
-
--   **利用者の責任:** このツールは、Unreal Engineのライセンス契約を遵守するよう慎重に設計されていますが、最終的な運用責任は利用者にあります。特に、レポートの投稿先 (`DISCUSSION_REPO`) には、**必ずアクセスが制限されたプライベートリポジトリを指定してください。** 公開リポジトリに投稿した場合、ライセンス違反となる可能性があります。
-
--   **APIキーと課金:**
-    *   本ツールはGoogle Gemini APIを利用しており、利用量に応じた料金が発生する場合があります。
-    *   このリポジトリをフォークして利用する場合、**フォークしたリポジトリのオーナーが自身のAPIキーに対する全ての課金責任を負います。**
-    *   Unreal Engineの規約を確実に遵守するため、**送信データがAIの学習に利用されないライセンスのAPIキーを使用することを強く推奨します。**
-
--   **設計上の安全性:**
-    *   ライセンス違反のリスクを最小限に抑えるため、本ツールはAIへの情報提供に際し、**Unreal Engineのソースコードやコード差分（diff）そのものは一切送信しません。** 分析対象となるのは、コミットメッセージと変更されたファイルパスのみです。
-
--   **実行に関する注意:**
-    *   このスクリプトは、設定に従って実際にGitHub Discussionsへ投稿を行います。テスト実行の際はご注意ください。
-    *   各種APIには利用制限（レートリミット）が存在します。
-
-
----
-
+---  
+*翻译已保留原始技术术语（如 PAT/Webhook），关键警告信息使用与原文一致的⚠️和粗体标注，并对长句进行了符合中文习惯的拆分优化。*
