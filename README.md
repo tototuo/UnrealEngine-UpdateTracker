@@ -1,6 +1,7 @@
 # **UnrealEngine Update Tracker**
 
 [English version](README.en.md)
+[日本語版](README.jp.md)
 
 本项目是一个自动化服务，定期监控虚幻引擎私有 GitHub 仓库的更新，使用 AI（Google Gemini）总结关键变更（如新功能、规格变动等），并将报告发布到 GitHub Discussions。
 
