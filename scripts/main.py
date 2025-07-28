@@ -98,6 +98,7 @@ Files Changed:
         prompt_filename = "report_prompt.md"
         if report_language == "Chinese":
             prompt_filename = "report_prompt_cn.md"
+            print(f"  use Chinese as report language .")
 
         with open(f"prompts/{prompt_filename}", "r", encoding="utf-8") as f:
             prompt_template = f.read()
