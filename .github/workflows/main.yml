@@ -8,8 +8,8 @@ on:
         required: false
         default: ''
       report_language:
-        description: 'Language for the report (e.g., Japanese, English). Default: Japanese'
-        required: false
+        description: 'Language for the report (e.g., Chinese, Japanese, English). Default: Chinese'
+        required: true
         default: ''
       discussion_category:
         description: 'GitHub Discussion category to post to. Default: Daily Reports'
@@ -32,8 +32,8 @@ on:
         required: false
         default: ''
   schedule:
-    # Runs every day at 23:00 UTC (which is 8:00 AM JST)
-    - cron: '0 23 * * *'
+    # Runs every day at 1:00 UTC (which is 9:00 AM CST)
+    - cron: '0 1 * * *'
 
 jobs:
   run-update-check:
@@ -56,7 +56,7 @@ jobs:
       # --- Dynamic Configuration ---
       # The script will use the following environment variables.
       # Priority: Manual Input > Repository Variable > Workflow Default
-      REPORT_LANGUAGE: ${{ github.event.inputs.report_language || vars.REPORT_LANGUAGE || 'Japanese' }}
+      REPORT_LANGUAGE: ${{ github.event.inputs.report_language || vars.REPORT_LANGUAGE || 'Chinese' }}
       GEMINI_MODEL: ${{ github.event.inputs.gemini_model || vars.GEMINI_MODEL || 'gemini-2.5-pro' }}
       DISCUSSION_CATEGORY: ${{ github.event.inputs.discussion_category || vars.DISCUSSION_CATEGORY || 'Daily Reports' }}
       COMMIT_SCAN_LIMIT: ${{ github.event.inputs.commit_scan_limit }}
